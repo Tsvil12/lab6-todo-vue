@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List на Vue 3</title>
+    <!-- Vue 3 через CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ВАШИ ТОЧНЫЕ СТИЛИ ИЗ ОРИГИНАЛЬНОГО ПРОЕКТА */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+        
+        body.dark-theme {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+        }
+        
+        .dark-theme .container {
+            background: rgba(25, 25, 35, 0.95);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-theme .header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .dark-theme h1 {
+            color: #e2e8f0;
+        }
+        
+        h1 i {
+            color: #4f46e5;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .theme-toggle {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .theme-toggle:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+        
+        .add-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .todo-input {
+            flex: 1;
+            padding: 18px 25px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .todo-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .dark-theme .todo-input {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .dark-theme .todo-input:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        }
+        
+        .add-btn {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.2rem;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 18px 25px 18px 55px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .search-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .dark-theme .search-input {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .dark-theme .search-input:focus {
+            border-color: #818cf8;
+        }
+        
+        .todo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        /* Стили для скроллбара */
+        .todo-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .todo-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .todo-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 10px;
+        }
+        
+        .dark-theme .todo-list::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 22px 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border-left: 5px solid #4f46e5;
+        }
+        
+        .todo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-theme .todo-item {
+            background: #2d3748;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-left-color: #818cf8;
+        }
+        
+        .todo-checkbox {
+            margin-right: 20px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #4f46e5;
+            transform: scale(1.2);
+        }
+        
+        .todo-text {
+            flex: 1;
+            font-size: 1.2rem;
+            color: #2d3748;
+            cursor: pointer;
+            padding: 5px 0;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .dark-theme .todo-text {
+            color: #e2e8f0;
+        }
+        
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+            opacity: 0.7;
+        }
+        
+        .edit-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #4f46e5;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            background: white;
+            color: #2d3748;
+            outline: none;
+        }
+        
+        .dark-theme .edit-input {
+            background: #374151;
+            border-color: #818cf8;
+            color: #e2e8f0;
+        }
+        
+        .todo-actions {
+            display: flex;
+            gap: 12px;
+            margin-left: 20px;
+        }
+        
+        .btn-icon {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .edit-btn {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+        }
+        
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .footer {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 2px solid rgba(0, 0, 0, 0.1);
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .dark-theme .footer {
+            border-top-color: rgba(255, 255, 255, 0.1);
+            color: #9ca3af;
+        }
+        
+        .footer p {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .footer span {
+            padding: 8px 15px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 10px;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        
+        .dark-theme .footer span {
+            background: rgba(129, 140, 248, 0.2);
+            color: #818cf8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.7;
+        }
+        
+        .empty-state p {
+            font-size: 1.3rem;
+            color: #6b7280;
+        }
+        
+        .dark-theme .empty-state p {
+            color: #cbd5e0;
+        }
+        
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .todo-item {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .add-form {
+                flex-direction: column;
+            }
+            
+            .add-btn, .theme-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .todo-item {
+                flex-wrap: wrap;
+                padding: 18px;
+            }
+            
+            .todo-actions {
+                width: 100%;
+                justify-content: center;
+                margin-top: 15px;
+                margin-left: 0;
+            }
+            
+            .footer p {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        /* Эффект для завершенных задач */
+        .todo-item.completed {
+            opacity: 0.9;
+            border-left-color: #10b981;
+        }
+        
+        .todo-item.completed:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div :class="{ 'dark-theme': isDarkTheme }">
+            <div class="container">
+                <!-- Заголовок и тема -->
+                <header class="header">
+                    <h1><i class="fas fa-tasks"></i> Vue To-Do List</h1>
+                    <button @click="toggleTheme" class="theme-toggle">
+                        <i :class="isDarkTheme ? 'fas fa-sun' : 'fas fa-moon'"></i>
+                        {{ isDarkTheme ? 'Светлая тема' : 'Тёмная тема' }}
+                    </button>
+                </header>
+
+                <!-- Форма добавления -->
+                <form @submit.prevent="addTodo" class="add-form">
+                    <input 
+                        v-model="newTodoText"
+                        type="text" 
+                        placeholder="Введите новую задачу..."
+                        required
+                        class="todo-input"
+                    >
+                    <button type="submit" class="btn add-btn">
+                        <i class="fas fa-plus-circle"></i> Добавить задачу
+                    </button>
+                </form>
+
+                <!-- Поиск -->
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input 
+                        v-model="searchQuery"
+                        type="text" 
+                        placeholder="Поиск задач..."
+                        class="search-input"
+                    >
+                </div>
+
+                <!-- Список задач -->
+                <div class="todo-list">
+                    <div 
+                        v-for="todo in filteredTodos" 
+                        :key="todo.id"
+                        class="todo-item"
+                        :class="{ completed: todo.completed }"
+                    >
+                        <input 
+                            type="checkbox" 
+                            v-model="todo.completed"
+                            class="todo-checkbox"
+                            @change="saveTodos"
+                        >
+                        <span 
+                            class="todo-text"
+                            @dblclick="startEditing(todo)"
+                            v-if="todo !== todoBeingEdited"
+                        >
+                            {{ todo.text }}
+                        </span>
+                        <input 
+                            v-else
+                            v-model="todo.text"
+                            @blur="finishEditing"
+                            @keyup.enter="finishEditing"
+                            class="edit-input"
+                            type="text"
+                            style="flex: 1; padding: 8px 12px; font-size: 1.1rem;"
+                        >
+                        <div class="todo-actions">
+                            <button @click="startEditing(todo)" class="btn-icon edit-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @click="deleteTodo(todo.id)" class="btn-icon delete-btn">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Сообщение если нет задач -->
+                    <div v-if="todos.length === 0" class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Список задач пуст. Добавьте первую задачу!</p>
+                    </div>
+                </div>
+
+                <!-- Статистика -->
+                <footer class="footer">
+                    <p>
+                        Всего задач: <span>{{ todos.length }}</span>
+                        Выполнено: <span>{{ completedCount }}</span>
+                        Осталось: <span>{{ todos.length - completedCount }}</span>
+                    </p>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, watch, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                // Реактивные данные
+                const todos = ref([]);
+                const newTodoText = ref('');
+                const searchQuery = ref('');
+                const isDarkTheme = ref(false);
+                const todoBeingEdited = ref(null);
+
+                // Загрузка из localStorage
+                onMounted(() => {
+                    const saved = localStorage.getItem('vue-todos');
+                    const savedTheme = localStorage.getItem('vue-theme');
+                    if (saved) {
+                        try {
+                            todos.value = JSON.parse(saved);
+                        } catch (e) {
+                            console.error('Ошибка загрузки задач:', e);
+                            todos.value = [];
+                        }
+                    }
+                    if (savedTheme) {
+                        isDarkTheme.value = JSON.parse(savedTheme);
+                        // Применяем тему к body сразу
+                        document.body.classList.toggle('dark-theme', isDarkTheme.value);
+                    }
+                });
+
+                // Следим за изменением темы и применяем к body
+                watch(isDarkTheme, (newVal) => {
+                    document.body.classList.toggle('dark-theme', newVal);
+                    localStorage.setItem('vue-theme', JSON.stringify(newVal));
+                });
+
+                // Автосохранение задач
+                watch(todos, (newTodos) => {
+                    localStorage.setItem('vue-todos', JSON.stringify(newTodos));
+                }, { deep: true });
+
+                // Методы
+                const addTodo = () => {
+                    if (newTodoText.value.trim() === '') return;
+                    const newTodo = {
+                        id: Date.now(),
+                        text: newTodoText.value.trim(),
+                        completed: false,
+                        createdAt: new Date().toISOString()
+                    };
+                    todos.value.unshift(newTodo); // Добавляем в начало
+                    newTodoText.value = '';
+                };
+
+                const deleteTodo = (id) => {
+                    if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                        todos.value = todos.value.filter(todo => todo.id !== id);
+                    }
+                };
+
+                const startEditing = (todo) => {
+                    todoBeingEdited.value = todo;
+                    // Фокус на поле ввода
+                    setTimeout(() => {
+                        const inputs = document.querySelectorAll('.edit-input');
+                        if (inputs.length > 0) {
+                            const lastInput = inputs[inputs.length - 1];
+                            lastInput.focus();
+                            lastInput.select();
+                        }
+                    }, 50);
+                };
+
+                const finishEditing = () => {
+                    if (todoBeingEdited.value && todoBeingEdited.value.text.trim() === '') {
+                        deleteTodo(todoBeingEdited.value.id);
+                    }
+                    todoBeingEdited.value = null;
+                };
+
+                const toggleTheme = () => {
+                    isDarkTheme.value = !isDarkTheme.value;
+                };
+
+                const saveTodos = () => {
+                    localStorage.setItem('vue-todos', JSON.stringify(todos.value));
+                };
+
+                // Вычисляемые свойства
+                const completedCount = computed(() => {
+                    return todos.value.filter(todo => todo.completed).length;
+                });
+
+                const filteredTodos = computed(() => {
+                    if (!searchQuery.value.trim()) return todos.value;
+                    const query = searchQuery.value.toLowerCase();
+                    return todos.value.filter(todo => 
+                        todo.text.toLowerCase().includes(query)
+                    );
+                });
+
+                // Инициализация примерами (если список пуст)
+                if (todos.value.length === 0) {
+                    todos.value = [
+                        { id: 1, text: 'Изучить Vue 3', completed: true },
+                        { id: 2, text: 'Перенести To-Do List на Vue', completed: false },
+                        { id: 3, text: 'Настроить развертывание', completed: false }
+                    ];
+                }
+
+                return {
+                    todos,
+                    newTodoText,
+                    searchQuery,
+                    isDarkTheme,
+                    todoBeingEdited,
+                    addTodo,
+                    deleteTodo,
+                    startEditing,
+                    finishEditing,
+                    toggleTheme,
+                    completedCount,
+                    filteredTodos
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
